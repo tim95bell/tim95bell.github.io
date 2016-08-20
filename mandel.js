@@ -87,11 +87,11 @@ window.onload = function init()
     lerpAmount.loc = gl.getUniformLocation(program, "lerpAmount");
     julia.loc = gl.getUniformLocation(program, "julia");
 
-    //  var textureOneImage = document.getElementById("textureOne");
-    //  var textureOne = gl.createTexture();
-    //  gl.bindTexture(gl.TEXTURE_2D, textureOne);
-    //  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureOneImage);
-    //  gl.bindTexture(gl.TEXTURE_2D, null);
+     var textureOneImage = document.getElementById("textureOne");
+     var textureOne = gl.createTexture();
+     gl.bindTexture(gl.TEXTURE_2D, textureOne);
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureOneImage);
+     gl.bindTexture(gl.TEXTURE_2D, null);
 
     // send uniform values to gpu
     gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
