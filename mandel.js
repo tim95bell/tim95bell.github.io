@@ -16,19 +16,20 @@ var state = {
 
 var zoom = {
   in: true,
-  amount: 0.05
+  // amount: 0.05
+  amount: 0.2
 };
 
 var bottomLeft = {};
 var pixelSize = {};
 var julia = {};
 var lerpAmount = {};
+// var colors = {};
 
 var mouse = {
   last: null,
   initial: null
 };
-
 
 window.onload = function init()
 {
@@ -47,6 +48,7 @@ window.onload = function init()
       buttons[i].style.width = (width/7) + "px"
 
     // set uniform vals
+    // initColors();
     julia.val = vec2(0.0, 0.0);
     julia.originalVal = vec2(julia.val);
     lerpAmount.val = lerpAmount.originalVal = 1.0;
@@ -86,18 +88,20 @@ window.onload = function init()
     pixelSize.loc = gl.getUniformLocation(program, "pixelSize");
     lerpAmount.loc = gl.getUniformLocation(program, "lerpAmount");
     julia.loc = gl.getUniformLocation(program, "julia");
+    // colors.loc = gl.getUniformLocation(program, "colors");
 
-     var textureOneImage = document.getElementById("textureOne");
-     var textureOne = gl.createTexture();
-     gl.bindTexture(gl.TEXTURE_2D, textureOne);
-     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureOneImage);
-     gl.bindTexture(gl.TEXTURE_2D, null);
+    //  var textureOneImage = document.getElementById("textureOne");
+    //  var textureOne = gl.createTexture();
+    //  gl.bindTexture(gl.TEXTURE_2D, textureOne);
+    //  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureOneImage);
+    //  gl.bindTexture(gl.TEXTURE_2D, null);
 
     // send uniform values to gpu
     gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
     gl.uniform1f(pixelSize.loc, pixelSize.val);
     gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     gl.uniform2fv(julia.loc, flatten(julia.val));
+    // gl.uniform3fv(colors.loc, flatten(colors.val));
 
     render();
 };
@@ -114,6 +118,9 @@ function render() {
         lerpAmount.val += lerpAmount.add;
         gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     }
+
+    // gl.bindTexture(gl.TEXTURE_2D, textureOne);
+    // gl.activateTexture(gl.TEXTURE0);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length);
@@ -245,3 +252,25 @@ window.onmousemove = function(){
 window.onmouseup = function(){
   mouse.last = null;
 };
+
+// function initColors(){
+//   colors.val = [];
+//   var color = vec3(0, 0, 0);
+//   while(color[0] < 78){
+//     color[0] += 2;
+//     colors.val.push(vec3(color));
+//   }
+//   while(color[1] < 80){
+//     if(color[0] < 99)
+//       color[0] += 1;
+//     color[1] += 4;
+//     colors.val.push(vec3(color));
+//   }
+//   while(color[2] < 100){
+//     if(color[1] < 99)
+//       color[1] += 1;
+//     color[2] += 4;
+//     colors.val.push(vec3(color));
+//   }
+//   console.log(colors.val.length);
+// }

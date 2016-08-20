@@ -25,6 +25,10 @@ uniform float pixelSize;
 uniform float lerpAmount;
 uniform vec2 julia;
 
+// uniform vec3 colors[84];
+
+// uniform sampler2D sampler;
+
 const int MAX_ITERATIONS = 1000;
 
 //FUNCTIONS
@@ -67,12 +71,32 @@ main()
     ++iterations;
   }
 
-  if(iterations == MAX_ITERATIONS){
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+  // if(iterations == MAX_ITERATIONS){
+  //   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+  // }
+  // else{
+  //   gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  // }
+
+
+
+  // gl_FragColor = vec4(colors[1], 1.0);
+
+
+  float percent = float(float(iterations)/float(MAX_ITERATIONS));
+  percent = sqrt(percent);
+  if(percent < 0.333){
+    gl_FragColor = vec4(percent*2.4, 0.0, 0.0, 1.0);
+  }
+  else if(percent < 0.666){
+    gl_FragColor = vec4(0.8 + (percent-0.333)/1.7, (percent-0.333)*2.4, 0.0, 1.0);
   }
   else{
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(0.99, 0.8 + (percent-0.666)/1.7, (percent-0.666)*3.0, 1.0 );
   }
+
+  // gl_FragColor = texture2D( sampler, vec2(iterations/MAX_ITERATIONS , 0.0) );
+  // gl_FragColor = texture2D( sampler, vec2(1 , 1.0) );
 
 }
 
