@@ -2,6 +2,8 @@
 var gl, canvas;
 var vertices, width, height;
 var program, programLine;
+var began = false;
+var buttons;
 
 var view = {
   MANDEL: 0,
@@ -74,17 +76,17 @@ window.onload = function init()
     canvas.height = height = window.innerHeight * 0.95;
 
     //size buttons
-    var buttons = document.getElementsByClassName("btn");
+    buttons = document.getElementsByClassName("btn");
     for(var i = 0; i < buttons.length; ++i)
       buttons[i].style.width = (width/7) + "px"
 
     // set uniform vals
-    julia.val = vec2(0.0, 0.0);
+    julia.val = vec2(-3.0, 0.0);
     julia.originalVal = vec2(julia.val);
     lerpAmount.val = lerpAmount.originalVal = 1.0;
     lerpAmount.add = 0.005;
-    pixelSize.val = pixelSize.originalVal = width < height ? 3.0/width : 3.0/height;
-    bottomLeft.val = vec2(-0.5-width/2*pixelSize.val, -height/2*pixelSize.val);
+    pixelSize.val = pixelSize.originalVal = width < height ? 6.0/width : 6.0/height;
+    bottomLeft.val = vec2(-width/2*pixelSize.val, -height/2*pixelSize.val);
     bottomLeft.originalVal = vec2(bottomLeft.val);
 
     calcLine(width/2, height/2);
@@ -150,8 +152,58 @@ window.onload = function init()
     // gl.uniform3fv(colors.loc, flatten(colors.val));
     gl.lineWidth(5.0);
 
-    render();
+    firstRender();
 };
+
+function Alert(head, body){
+  this.draw = function(){
+    var winW = width;
+    var winH = height;
+    var dialogoverlay = document.getElementById("dialogoverlay");
+    var dialogbox = document.getElementById("dialogbox");
+    dialogoverlay.style.display = "block";
+    dialogoverlay.style.height = winH+"px";
+    dialogbox.style.left = "10%";//((winW/2) - (550*0.5)) +"px"; // 550 is the box width
+    dialogbox.style.top = "100px";
+    dialogbox.style.display = "block";
+    document.getElementById("dialogboxhead").innerHTML = head;
+    document.getElementById("dialogboxbody").innerHTML = body;
+    //document.getElementById("dialogboxfoot").innerHTML = "<button onclick=alertOk()>OK</button>";
+    for(var i = 0; i < buttons.length; ++i){
+      buttons[i].disabled = true;
+    }
+  }
+}
+
+function alertOk(){
+  document.getElementById("dialogbox").style.display = "none";
+  document.getElementById("dialogoverlay").style.display = "none";
+  began = true;
+  for(var i = 0; i < buttons.length; ++i){
+    buttons[i].disabled = false;
+  }
+  render();
+};
+
+function firstRender(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length);
+
+  window.setTimeout(welcome, 100);
+}
+
+function welcome(){
+  var alert = new Alert("Fractal Explorer",
+  "<p>Move</p>---   drag mouse / finger.<br>"+
+  "<p>Zoom</p>---    click mouse / tap finger.<br>"+
+  "<p>Change Zoom Direction</p>---    press \"Zoom In\" or \"Zoom Out\" button.<br>"+
+  "<p>View Mandelbrot Set</p>---    press \"MANDELBROT\" button.<br>"+
+  "<p>View Julia Set for a specific point</p>---    press \"JULIA-POINT\" button, then click/tap the point on the screen.<br>"+
+  "<p>View Julia Set for mouse location</p>---    press \"JULIA\" button, then move mouse / drag finger, around.<br>"+
+  "<br><br>Press OK to continue..."
+);
+  alert.draw();
+}
 
 
 function render() {
@@ -206,7 +258,8 @@ function windowResize(){
   gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
   gl.uniform1f(pixelSize.loc, pixelSize.val);
 
-  render();
+  if(began)
+    render();
 }
 
 // Button handlers
@@ -217,13 +270,13 @@ function mandelBtn(){
 }
 
 function juliaBtn(){
-  state.current = state.JULIASCAN;
+  state.current = state.JULIAPOINT;
+  view.current = view.JULIA;
   render();
 }
 
 function juliaPointBtn(){
-  state.current = state.JULIAPOINT;
-  view.current = view.JULIA;
+  state.current = state.JULIASCAN;
   render();
 }
 
@@ -260,12 +313,14 @@ function zoomOutBtn(){
 
 // Generic input
 function inputClicked(x, y){
-  if(x > width || y > height || x < 0 || y < 0)
+  if(x > width || y > height || x < 0 || y < 0 || !began)
     return;
 
   // loc in mandel space
   var loc = vec2( bottomLeft.val[0] + x*pixelSize.val, bottomLeft.val[1] + y*pixelSize.val );
 
+  if(mouse.initial === null)
+    return;
   var mouseMoved = (x === mouse.initial[0]  &&  y === mouse.initial[1]);
 
   // NORMAL
@@ -296,13 +351,15 @@ function inputClicked(x, y){
 }
 
 function inputDown(x, y){
-  if(x > width || y > height || x < 0 || y < 0)
+  if(x > width || y > height || x < 0 || y < 0 || !began)
     return;
 
   mouse.last = mouse.initial = vec2(x, y);
 }
 
 function inputMoved(x, y){
+  if(!began)
+    return;
 
     if(state.current === state.JULIAPOINT){
       julia.val[0] = bottomLeft.val[0]+x*pixelSize.val;
