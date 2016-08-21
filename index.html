@@ -102,6 +102,31 @@ main()
 
 
 </script>
+
+<!--                                                      -->
+
+<script id="vertex-shader-line" type="x-shader/x-vertex">
+attribute vec2 vPositionLine;
+
+void
+main()
+{
+    gl_Position = vec4(vPositionLine, 1.0, 1.0);
+}
+</script>
+<script id="fragment-shader-line" type="x-shader/x-fragment">
+
+precision mediump float;
+
+
+void
+main()
+{
+  gl_FragColor = vec4(0.0, 1.0, 0.3, 1.0);
+}
+
+</script>
+
 <script type="text/javascript" src="webgl-utils.js"></script>
 <script type="text/javascript" src="initShaders.js"></script>
 <script type="text/javascript" src="MV.js"></script>
@@ -121,6 +146,8 @@ main()
     <button class="btn" onclick="mandelBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="mandelBtn">MANDELBROT</button>
 
     <button class="btn" onclick="juliaBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="juliaBtn">JULIA</button>
+
+    <button class="btn" onclick="juliaPointBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="juliaPointBtn">JULIA POINT</button>
 
     <image src="textureOne.png" id="textureOne" width="0px" height = "0px"></image>
   </body>

@@ -1,6 +1,7 @@
 "use strict;"
 var gl, canvas;
 var vertices, width, height;
+var program, programLine;
 
 var view = {
   MANDEL: 0,
@@ -11,6 +12,7 @@ var view = {
 var state = {
   NORMAL: 0,
   JULIASCAN: 1,
+  JULIAPOINT: 2,
   current: 0
 };
 
@@ -26,10 +28,35 @@ var julia = {};
 var lerpAmount = {};
 // var colors = {};
 
+var line;
+
 var mouse = {
   last: null,
   initial: null
 };
+
+function calcLine(x, y){
+  var size = 10;
+  line = new Float32Array( size*2 );
+  line[0] = x;
+  line[1] = y;
+  var c = vec2( bottomLeft.val[0] + x*pixelSize.val,
+                bottomLeft.val[1] + y*pixelSize.val );
+  var z = vec2(c);
+  var newZ = vec2();
+
+  for(var i = 1; i < size; ++i){
+    newZ[0] = z[0]*z[0] + z[1]*z[1]*-1 + c[0];
+    newZ[1] = z[0]*z[1] + z[1]*z[0] + c[1];
+    z[0] = newZ[0];
+    z[1] = newZ[1];
+
+    var screenX = (x-bottomLeft.val[0])/pixelSize.val;
+    var screenY = (y-bottomLeft.val[1])/pixelSize.val;
+    line[i*2] = screenX;
+    line[i*2+1] = screenY;
+  }
+}
 
 window.onload = function init()
 {
@@ -60,6 +87,8 @@ window.onload = function init()
     bottomLeft.val = vec2(-0.5-width/2*pixelSize.val, -height/2*pixelSize.val);
     bottomLeft.originalVal = vec2(bottomLeft.val);
 
+    calcLine(width/2, height/2);
+
     //set vertices
     vertices = [
       vec2(-1.0, -1.0),
@@ -73,8 +102,23 @@ window.onload = function init()
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     //  shaders
-    var program = initShaders(gl, "vertex-shader", "fragment-shader");
+    // programLine = initShaders(gl, "vertex-shader-line", "fragment-shader-line");
+    // gl.useProgram(programLine);
+    //
+    // var vBufferLine = gl.createBuffer();
+    // gl.bindBuffer(gl.ARRAY_BUFFER, vBufferLine);
+    // gl.bufferData(gl.ARRAY_BUFFER, line, gl.STATIC_DRAW);
+    //
+    // vPositionLine = gl.getAttribLocation(programLine, "vPositionLine");
+    // gl.vertexAttribPointer(vPositionLine, 2, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(vPositionLine);
+
+
+
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
+
+
 
     // vBuffer and vPosition
     var vBuffer = gl.createBuffer();
@@ -104,12 +148,16 @@ window.onload = function init()
     gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     gl.uniform2fv(julia.loc, flatten(julia.val));
     // gl.uniform3fv(colors.loc, flatten(colors.val));
+    gl.lineWidth(5.0);
 
     render();
 };
 
 
 function render() {
+    // gl.useProgram(program);
+    // gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
+
     if(view.current === view.MANDEL){
       if(lerpAmount.val > 0)
         lerpAmount.val -= lerpAmount.add;
@@ -131,6 +179,13 @@ function render() {
         (view.current === view.JULIA && lerpAmount.val < 1) ){
       requestAnimFrame(render);
     }
+
+    // gl.useProgram(programLine);
+    // gl.bufferData(gl.ARRAY_BUFFER, line, gl.STATIC_DRAW);
+    // gl.drawArrays(gl.LINE_STRIP, 0, line.length/2);
+    // gl.useProgram(program);
+
+
 }
 
 function windowResize(){
@@ -163,6 +218,12 @@ function mandelBtn(){
 
 function juliaBtn(){
   state.current = state.JULIASCAN;
+  render();
+}
+
+function juliaPointBtn(){
+  state.current = state.JULIAPOINT;
+  view.current = view.JULIA;
   render();
 }
 
@@ -242,6 +303,15 @@ function inputDown(x, y){
 }
 
 function inputMoved(x, y){
+
+    if(state.current === state.JULIAPOINT){
+      julia.val[0] = bottomLeft.val[0]+x*pixelSize.val;
+      julia.val[1] = bottomLeft.val[1]+y*pixelSize.val;
+      gl.uniform2fv(julia.loc, julia.val);
+      render();
+      return;
+    }
+
     if(mouse.last === null)
       return;
 
@@ -262,6 +332,9 @@ window.onmousedown = function(){
 
 window.onmousemove = function(){
   inputMoved(event.clientX, height-event.clientY);
+  mouse.current = vec2(event.clientX, height-event.clientY);
+
+  // calcLine(event.clientX, height-event.clientY);
 };
 
 window.onclick = function(){
