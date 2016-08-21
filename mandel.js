@@ -164,7 +164,7 @@ function Alert(head, body){
     dialogoverlay.style.display = "block";
     dialogoverlay.style.height = winH+"px";
     dialogbox.style.left = "10%";//((winW/2) - (550*0.5)) +"px"; // 550 is the box width
-    dialogbox.style.top = "100px";
+    dialogbox.style.top = "0px";
     dialogbox.style.display = "block";
     document.getElementById("dialogboxhead").innerHTML = head;
     document.getElementById("dialogboxbody").innerHTML = body;
@@ -199,8 +199,7 @@ function welcome(){
   "<p>Change Zoom Direction</p>---    press \"Zoom In\" or \"Zoom Out\" button.<br>"+
   "<p>View Mandelbrot Set</p>---    press \"MANDELBROT\" button.<br>"+
   "<p>View Julia Set for a specific point</p>---    press \"JULIA-POINT\" button, then click/tap the point on the screen.<br>"+
-  "<p>View Julia Set for mouse location</p>---    press \"JULIA\" button, then move mouse / drag finger, around.<br>"+
-  "<br><br>Press OK to continue..."
+  "<p>View Julia Set for mouse location</p>---    press \"JULIA\" button, then move mouse / drag finger, around.<br>"
 );
   alert.draw();
 }
