@@ -31,9 +31,30 @@ var mouse = {
   initial: null
 };
 
+function handleStart(){
+  window.onmousedown();
+}
+
+function handleEnd(){
+  window.onmouseup();
+}
+
+function handleCancel(){
+
+}
+
+function handleMove(){
+  window.onmousemove();
+}
+
 window.onload = function init()
 {
     canvas = document.getElementById("gl-canvas");
+
+    canvas.addEventListener("touchstart", handleStart, false);
+    canvas.addEventListener("touchend", handleEnd, false);
+    canvas.addEventListener("touchcancel", handleCancel, false);
+    canvas.addEventListener("touchmove", handleMove, false);
 
     gl = WebGLUtils.setupWebGL(canvas);
     if (!gl) { alert("WebGL isn't available"); }
