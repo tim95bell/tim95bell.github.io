@@ -32,11 +32,11 @@ var mouse = {
 };
 
 function handleStart(){
-  window.onmousedown();
+  mouseDown();
 }
 
 function handleEnd(){
-  window.onmouseup();
+  mouseUp();
 }
 
 function handleCancel(){
@@ -44,7 +44,32 @@ function handleCancel(){
 }
 
 function handleMove(){
-  window.onmousemove();
+  mouseMove();
+}
+
+function mouseDown(){
+  if(event.clientX > width || event.clientY > height)
+    return;
+
+    mouse.last = mouse.initial = vec2(event.clientX, height-event.clientY);
+}
+
+function mouseUp(){
+  mouse.last = null;
+}
+
+function mouseMove(){
+  if(mouse.last === null)
+    return;
+
+   var mouseLoc = vec2(event.clientX, height-event.clientY);
+   var dif = subtract(mouse.last, mouseLoc);
+   bottomLeft.val[0] += dif[0]*pixelSize.val;
+   bottomLeft.val[1] += dif[1]*pixelSize.val;
+   gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
+
+  mouse.last = mouseLoc;
+  render();
 }
 
 window.onload = function init()
@@ -250,28 +275,31 @@ window.onclick = function(){
 };
 
 window.onmousedown = function(){
-  if(event.clientX > width || event.clientY > height)
-    return;
-
-    mouse.last = mouse.initial = vec2(event.clientX, height-event.clientY);
+  // if(event.clientX > width || event.clientY > height)
+  //   return;
+  //
+  //   mouse.last = mouse.initial = vec2(event.clientX, height-event.clientY);
+  mouseDown();
 };
 
 window.onmousemove = function(){
-  if(mouse.last === null)
-    return;
-
-   var mouseLoc = vec2(event.clientX, height-event.clientY);
-   var dif = subtract(mouse.last, mouseLoc);
-   bottomLeft.val[0] += dif[0]*pixelSize.val;
-   bottomLeft.val[1] += dif[1]*pixelSize.val;
-   gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
-
-  mouse.last = mouseLoc;
-  render();
+  // if(mouse.last === null)
+  //   return;
+  //
+  //  var mouseLoc = vec2(event.clientX, height-event.clientY);
+  //  var dif = subtract(mouse.last, mouseLoc);
+  //  bottomLeft.val[0] += dif[0]*pixelSize.val;
+  //  bottomLeft.val[1] += dif[1]*pixelSize.val;
+  //  gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
+  //
+  // mouse.last = mouseLoc;
+  // render();
+  mouseMove();
 };
 
 window.onmouseup = function(){
-  mouse.last = null;
+  // mouse.last = null;
+  mouseUp();
 };
 
 // function initColors(){
