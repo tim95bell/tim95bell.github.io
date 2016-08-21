@@ -31,55 +31,13 @@ var mouse = {
   initial: null
 };
 
-function handleStart(){
-  mouseDown();
-}
-
-function handleEnd(){
-  mouseUp();
-}
-
-function handleCancel(){
-
-}
-
-function handleMove(){
-  mouseMove();
-}
-
-function mouseDown(){
-  if(event.clientX > width || event.clientY > height)
-    return;
-
-    mouse.last = mouse.initial = vec2(event.clientX, height-event.clientY);
-}
-
-function mouseUp(){
-  mouse.last = null;
-}
-
-function mouseMove(){
-  if(mouse.last === null)
-    return;
-
-   var mouseLoc = vec2(event.clientX, height-event.clientY);
-   var dif = subtract(mouse.last, mouseLoc);
-   bottomLeft.val[0] += dif[0]*pixelSize.val;
-   bottomLeft.val[1] += dif[1]*pixelSize.val;
-   gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
-
-  mouse.last = mouseLoc;
-  render();
-}
-
 window.onload = function init()
 {
     canvas = document.getElementById("gl-canvas");
 
-    canvas.addEventListener("touchstart", handleStart, false);
-    canvas.addEventListener("touchend", handleEnd, false);
-    canvas.addEventListener("touchcancel", handleCancel, false);
-    canvas.addEventListener("touchmove", handleMove, false);
+    canvas.addEventListener("touchstart", touchStart, false);
+    canvas.addEventListener("touchend", touchEnd, false);
+    canvas.addEventListener("touchmove", touchMove, false);
 
     gl = WebGLUtils.setupWebGL(canvas);
     if (!gl) { alert("WebGL isn't available"); }
@@ -94,7 +52,6 @@ window.onload = function init()
       buttons[i].style.width = (width/7) + "px"
 
     // set uniform vals
-    // initColors();
     julia.val = vec2(0.0, 0.0);
     julia.originalVal = vec2(julia.val);
     lerpAmount.val = lerpAmount.originalVal = 1.0;
@@ -134,7 +91,6 @@ window.onload = function init()
     pixelSize.loc = gl.getUniformLocation(program, "pixelSize");
     lerpAmount.loc = gl.getUniformLocation(program, "lerpAmount");
     julia.loc = gl.getUniformLocation(program, "julia");
-    // colors.loc = gl.getUniformLocation(program, "colors");
 
     //  var textureOneImage = document.getElementById("textureOne");
     //  var textureOne = gl.createTexture();
@@ -181,12 +137,13 @@ function windowResize(){
   var oldCenter = vec2(bottomLeft.val[0] + width/2*pixelSize.val, bottomLeft.val[1] + height/2*pixelSize.val);
   canvas.width = width = window.innerWidth;
   canvas.height = height = window.innerHeight * 0.95;
-  pixelSize.val = width < height ? 4.0/width : 4.0/height;
+  pixelSize.val = pixelSize.originalVal = width < height ? 4.0/width : 4.0/height;
 
   //calc button sizes
 
   bottomLeft.val[0] = oldCenter[0] - (width/2*pixelSize.val);
   bottomLeft.val[1] = oldCenter[1] - (height/2*pixelSize.val);
+  bottomLeft.originalVal = vec2(bottomLeft.val);
 
   gl.viewport(0, 0, width, height);
 
@@ -217,6 +174,7 @@ function resetBtn(){
   lerpAmount.val = lerpAmount.originalVal;
   bottomLeft.val = vec2(bottomLeft.originalVal);
   julia.val = vec2(julia.originalVal);
+
   gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
   gl.uniform1f(pixelSize.loc, pixelSize.val);
   gl.uniform1f(lerpAmount.loc, lerpAmount.val);
@@ -234,20 +192,23 @@ function zoomOutBtn(){
   state.current = state.NORMAL;
 }
 
-// Mouse handlers
-window.onclick = function(){
-  if(event.clientX > width || event.clientY > height)
+////////////////////////////////////////////////////////////////////////
+//////////// Touch and Mouse
+////////////////////////////////////////////////////////////////////////
+
+
+// Generic input
+function inputClicked(x, y){
+  if(x > width || y > height || x < 0 || y < 0)
     return;
 
-  // x and y in pixel space
-  var x = event.clientX;
-  var y = height-event.clientY;
   // loc in mandel space
   var loc = vec2( bottomLeft.val[0] + x*pixelSize.val, bottomLeft.val[1] + y*pixelSize.val );
 
+  var mouseMoved = (x === mouse.initial[0]  &&  y === mouse.initial[1]);
+
   // NORMAL
-  if(x === mouse.initial[0] && y === mouse.initial[1] && // checking mouse hasnt moved, so we zoom not move
-    state.current === state.NORMAL){
+  if(mouseMoved  &&  state.current === state.NORMAL){
 
     pixelSize.val = zoom.in ?
       pixelSize.val - pixelSize.val * zoom.amount :
@@ -259,67 +220,84 @@ window.onclick = function(){
     gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
     gl.uniform1f(pixelSize.loc, pixelSize.val);
 
-    // pixelSize *= 0.9;
-    // bottomLeft[0] = loc[0] - x*pixelSize;
-    // bottomLeft[1] = loc[1] - y*pixelSize;
   }
   // JULIASCAN
-  else if(state.current === state.JULIASCAN){
+  else if(mouseMoved  &&  state.current === state.JULIASCAN){
     julia.val = loc;
     state.current = state.NORMAL;
     view.current = view.JULIA;
     gl.uniform2fv(julia.loc, flatten(julia.val));
   }
 
-  render();
-};
+  mouse.last = null;
 
+  render();
+}
+
+function inputDown(x, y){
+  if(x > width || y > height || x < 0 || y < 0)
+    return;
+
+  mouse.last = mouse.initial = vec2(x, y);
+}
+
+function inputMoved(x, y){
+    if(mouse.last === null)
+      return;
+
+     var mouseLoc = vec2(x, y);
+     var dif = subtract(mouse.last, mouseLoc);
+     bottomLeft.val[0] += dif[0]*pixelSize.val;
+     bottomLeft.val[1] += dif[1]*pixelSize.val;
+     gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
+
+    mouse.last = mouseLoc;
+    render();
+}
+
+// MOUSE
 window.onmousedown = function(){
-  // if(event.clientX > width || event.clientY > height)
-  //   return;
-  //
-  //   mouse.last = mouse.initial = vec2(event.clientX, height-event.clientY);
-  mouseDown();
+  inputDown(event.clientX, height-event.clientY);
 };
 
 window.onmousemove = function(){
-  // if(mouse.last === null)
-  //   return;
-  //
-  //  var mouseLoc = vec2(event.clientX, height-event.clientY);
-  //  var dif = subtract(mouse.last, mouseLoc);
-  //  bottomLeft.val[0] += dif[0]*pixelSize.val;
-  //  bottomLeft.val[1] += dif[1]*pixelSize.val;
-  //  gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
-  //
-  // mouse.last = mouseLoc;
-  // render();
-  mouseMove();
+  inputMoved(event.clientX, height-event.clientY);
 };
 
-window.onmouseup = function(){
-  // mouse.last = null;
-  mouseUp();
+window.onclick = function(){
+  inputClicked(event.clientX, height-event.clientY);
 };
 
-// function initColors(){
-//   colors.val = [];
-//   var color = vec3(0, 0, 0);
-//   while(color[0] < 78){
-//     color[0] += 2;
-//     colors.val.push(vec3(color));
-//   }
-//   while(color[1] < 80){
-//     if(color[0] < 99)
-//       color[0] += 1;
-//     color[1] += 4;
-//     colors.val.push(vec3(color));
-//   }
-//   while(color[2] < 100){
-//     if(color[1] < 99)
-//       color[1] += 1;
-//     color[2] += 4;
-//     colors.val.push(vec3(color));
-//   }
-//   console.log(colors.val.length);
-// }
+// TOUCH
+function touchStart(evt){
+  evt.preventDefault();
+  var touches = evt.changedTouches;
+  var touch = touches[0];
+
+  var x = touch.clientX;
+  var y = height-touch.clientY;
+
+  inputDown(x, y);
+}
+
+function touchEnd(evt){
+  evt.preventDefault();
+  var touches = evt.changedTouches;
+  var touch = touches[0];
+
+  var x = touch.clientX;
+  var y = height-touch.clientY;
+
+  inputClicked(x, y);
+}
+
+function touchMove(evt){
+  evt.preventDefault();
+  var touches = evt.changedTouches;
+  var touch = touches[0];
+
+  var x = touch.clientX;
+  var y = height-touch.clientY;
+
+  inputMoved(x, y);
+}
