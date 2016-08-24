@@ -1,7 +1,7 @@
 "use strict;"
 var gl, canvas;
 var vertices, width, height;
-var program, programLine;
+var program;
 var began = false;
 var buttons;
 
@@ -28,37 +28,11 @@ var bottomLeft = {};
 var pixelSize = {};
 var julia = {};
 var lerpAmount = {};
-// var colors = {};
-
-var line;
 
 var mouse = {
   last: null,
   initial: null
 };
-
-function calcLine(x, y){
-  var size = 10;
-  line = new Float32Array( size*2 );
-  line[0] = x;
-  line[1] = y;
-  var c = vec2( bottomLeft.val[0] + x*pixelSize.val,
-                bottomLeft.val[1] + y*pixelSize.val );
-  var z = vec2(c);
-  var newZ = vec2();
-
-  for(var i = 1; i < size; ++i){
-    newZ[0] = z[0]*z[0] + z[1]*z[1]*-1 + c[0];
-    newZ[1] = z[0]*z[1] + z[1]*z[0] + c[1];
-    z[0] = newZ[0];
-    z[1] = newZ[1];
-
-    var screenX = (x-bottomLeft.val[0])/pixelSize.val;
-    var screenY = (y-bottomLeft.val[1])/pixelSize.val;
-    line[i*2] = screenX;
-    line[i*2+1] = screenY;
-  }
-}
 
 window.onload = function init()
 {
@@ -89,8 +63,6 @@ window.onload = function init()
     bottomLeft.val = vec2(-width/2*pixelSize.val, -height/2*pixelSize.val);
     bottomLeft.originalVal = vec2(bottomLeft.val);
 
-    calcLine(width/2, height/2);
-
     //set vertices
     vertices = [
       vec2(-1.0, -1.0),
@@ -101,26 +73,10 @@ window.onload = function init()
 
     //webgl
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-
-    //  shaders
-    // programLine = initShaders(gl, "vertex-shader-line", "fragment-shader-line");
-    // gl.useProgram(programLine);
-    //
-    // var vBufferLine = gl.createBuffer();
-    // gl.bindBuffer(gl.ARRAY_BUFFER, vBufferLine);
-    // gl.bufferData(gl.ARRAY_BUFFER, line, gl.STATIC_DRAW);
-    //
-    // vPositionLine = gl.getAttribLocation(programLine, "vPositionLine");
-    // gl.vertexAttribPointer(vPositionLine, 2, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(vPositionLine);
-
-
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-
-
 
     // vBuffer and vPosition
     var vBuffer = gl.createBuffer();
@@ -131,26 +87,17 @@ window.onload = function init()
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-
     // set uniform locs
     bottomLeft.loc = gl.getUniformLocation(program, "bottomLeft");
     pixelSize.loc = gl.getUniformLocation(program, "pixelSize");
     lerpAmount.loc = gl.getUniformLocation(program, "lerpAmount");
     julia.loc = gl.getUniformLocation(program, "julia");
 
-    //  var textureOneImage = document.getElementById("textureOne");
-    //  var textureOne = gl.createTexture();
-    //  gl.bindTexture(gl.TEXTURE_2D, textureOne);
-    //  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureOneImage);
-    //  gl.bindTexture(gl.TEXTURE_2D, null);
-
     // send uniform values to gpu
     gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
     gl.uniform1f(pixelSize.loc, pixelSize.val);
     gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     gl.uniform2fv(julia.loc, flatten(julia.val));
-    // gl.uniform3fv(colors.loc, flatten(colors.val));
-    gl.lineWidth(5.0);
 
     firstRender();
 };
@@ -163,12 +110,11 @@ function Alert(head, body){
     var dialogbox = document.getElementById("dialogbox");
     dialogoverlay.style.display = "block";
     dialogoverlay.style.height = winH+"px";
-    dialogbox.style.left = "10%";//((winW/2) - (550*0.5)) +"px"; // 550 is the box width
+    dialogbox.style.left = "10%";
     dialogbox.style.top = "0px";
     dialogbox.style.display = "block";
     document.getElementById("dialogboxhead").innerHTML = head;
     document.getElementById("dialogboxbody").innerHTML = body;
-    //document.getElementById("dialogboxfoot").innerHTML = "<button onclick=alertOk()>OK</button>";
     for(var i = 0; i < buttons.length; ++i){
       buttons[i].disabled = true;
     }
@@ -206,9 +152,6 @@ function welcome(){
 
 
 function render() {
-    // gl.useProgram(program);
-    // gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
-
     if(view.current === view.MANDEL){
       if(lerpAmount.val > 0)
         lerpAmount.val -= lerpAmount.add;
@@ -220,9 +163,6 @@ function render() {
         gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     }
 
-    // gl.bindTexture(gl.TEXTURE_2D, textureOne);
-    // gl.activateTexture(gl.TEXTURE0);
-
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length);
 
@@ -230,13 +170,6 @@ function render() {
         (view.current === view.JULIA && lerpAmount.val < 1) ){
       requestAnimFrame(render);
     }
-
-    // gl.useProgram(programLine);
-    // gl.bufferData(gl.ARRAY_BUFFER, line, gl.STATIC_DRAW);
-    // gl.drawArrays(gl.LINE_STRIP, 0, line.length/2);
-    // gl.useProgram(program);
-
-
 }
 
 function windowResize(){
