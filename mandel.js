@@ -56,6 +56,7 @@ window.onload = function init()
       currentViewImage: document.getElementById("currentViewImage"),
       currentActionImage: document.getElementById("currentActionImage")
     };
+    buttons.mandel.style.display = "none";
     buttons.plus.style.display = "none";
 
     canvas.addEventListener("touchstart", touchStart, false);
@@ -163,7 +164,7 @@ function windowResize(){
 
 // Button handlers
 function mandelBtn(){
-  buttons.currentViewImage.src = "icons/mandelViewInvert.png";
+  buttons.currentViewImage.src = "icons/mandelView.png";
   buttons.mandel.style.display = "none";
   view.current = view.MANDEL;
   state.current = state.NORMAL;
@@ -203,8 +204,8 @@ function juliaBtn(){
 }
 
 function resetBtn(){
-  buttons.plus.style.display = "none";
-  buttons.mandel.style.display = buttons.minus.style.display = "";
+  buttons.plus.style.display = buttons.mandel.style.display = "none";
+  buttons.minus.style.display = "";
   buttons.currentActionImage.src = "icons/plusWhite.png";
   buttons.currentViewImage.src = "icons/mandelView.png";
 
