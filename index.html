@@ -7,32 +7,119 @@
   *{ padding: 0; margin: 0; border: 0; }
   body { overflow: hidden; }
 
-  #dialogoverlay {
-    display: none;
-    opacity: 0.0;
+  button:focus {
+    outline: none;
+  }
+
+  #head {
     position: fixed;
-    top: 0px;
     left: 0px;
-    background: #FFF;
+    top: 0px;
     width: 100%;
-    z-index: 10;
+    margin: 10px 0px;
+    height: 50px;
   }
-  #dialogbox{
-    display: none;
+
+  * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+
+  #foot {
     position: fixed;
-    background: #000;
-    border-radius: 7px;
-    width: 80%;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    margin: 10px 0px;
+    height: 50px;
+  }
+
+  #resetBtn {
+    float: left;
     z-index: 10;
   }
-  #dialogbox > div { background: #FFF; margin: 8px; }
-  #dialogbox > div > #dialogboxhead { background: #666; font-size: 19px; padding: 10px; color: #CCC; }
-  #dialogbox > div > #dialogboxbody { background: #333; padding: 20px; color: #999; }
-  #dialogbox > div > #dialogboxbody > p{ color: white; }
-  #dialogbox > div > #dialogboxfoot { background: #666; padding: 10px; text-align: right; }
-  #dialogbox > div > #dialogboxfoot > button { height: 30px; width: 60px; }
 
+  #zoomInBtn {
+    float: left;
+  }
+  #zoomOutBtn {
+    float: left;
+  }
+  #juliaBtn {
+    float: right;
+  }
+  #mandelBtn {
+    float: right;
+  }
 
+  #currentView img {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+  }
+
+  #currentAction img {
+    position: relative;
+
+    padding: 20% 0px;
+
+    width: 60%;
+    height: 60%;
+  }
+
+  #currentAction {
+    margin: 10px;
+    /*disabled: true;*/
+    width: 40px;
+    height: 40px;
+    background: #000;
+    border-radius: 100%;
+    position: relative;
+    display: inline-block;
+  }
+
+  #currentView {
+    margin: 10px;
+    width: 40px;
+    height: 40px;
+    /*disabled: true;*/
+    position: relative;
+    background: transparent;
+    display: inline-block;
+  }
+
+  #currentInfo {
+    position: relative;
+    text-allign: center;
+  }
+
+  #head div {
+    text-align: center;
+  }
+
+  .btn:hover {
+    margin-left: 7.5px;
+    margin-right: 7.5px;
+    margin-top: -2.5px;
+  }
+
+  .btn {
+    background: #fff;
+    position: relative;
+    border-radius: 100%;
+    width: 50px;
+    height: 50px;
+    margin: 0px 10px;
+    border: 2px solid #000;
+  }
+
+  .btn:hover {
+    width: 55px;
+    height: 55px;
+  }
 
 </style>
 <script id="vertex-shader" type="x-shader/x-vertex">
@@ -94,8 +181,8 @@ main()
     ++iterations;
   }
 
-  if(iterations == MAX_ITERATIONS)
-    discard;
+  // if(iterations == MAX_ITERATIONS)
+  //   discard;
 
   float percent = float(iterations)/float(MAX_ITERATIONS);
 
@@ -115,7 +202,10 @@ main()
   // }
 
 // BLACK & WHITE
+  if(iterations == MAX_ITERATIONS)
+    discard;
   percent = sqrt(percent);
+  // percent = percent;
   if(iterations < 15){
     float x = float(iterations)*0.01;
     gl_FragColor = vec4(x, x, x, 1.0);
@@ -123,6 +213,27 @@ main()
   else{
     gl_FragColor = vec4(percent, percent, percent, 1.0);
   }
+
+//  WHITE & BLACK
+  // percent = sqrt(percent);
+  // if(iterations < 15){
+  //   float x = 1.0-float(iterations)*0.01;
+  //   gl_FragColor = vec4(x, x, x, 1.0);
+  // }
+  // else{
+  //   gl_FragColor = vec4(percent, percent, percent, 1.0);
+  //
+  // }
+
+  //  WHITE & BLACK  (SMOOTH)
+    // if(iterations == MAX_ITERATIONS){
+    //     gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    // }
+    // else{
+    //   //percent = 1.0-sqrt(percent);
+    //   percent = 1.0-sqrt(percent);
+    //   gl_FragColor = vec4(percent, percent, percent, 1.0);
+    // }
 
 }
 </script>
@@ -132,33 +243,41 @@ main()
 <script type="text/javascript" src="mandel.js"></script>
   </head>
   <body onresize="windowResize()">
+
     <canvas id="gl-canvas">
       Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
 
-    <button class="btn" onclick="resetBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="resetBtn">Reset</button>
-
-    <button class="btn" onclick="zoomInBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="zoomInBtn">Zoom In</button>
-
-    <button class="btn" onclick="zoomOutBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="zoomOutBtn">Zoom Out</button>
-
-    <button class="btn" onclick="mandelBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="mandelBtn">MANDELBROT</button>
-
-    <button class="btn" onclick="juliaPointBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="juliaPointBtn">JULIA-POINT</button>
-
-    <button class="btn" onclick="juliaBtn()" type="button" style="padding-left: 30px; padding-right: 30px;" id="juliaBtn">JULIA</button>
-
-    <image src="textureOne.png" id="textureOne" width="0px" height = "0px"></image>
-
-    <!-- DIALOG BOX -->
-    <div id="dialogoverlay"></div>
-    <div id="dialogbox">
-      <div>
-        <div id="dialogboxhead"></div>
-        <div id="dialogboxbody"></div>
-        <div id="dialogboxfoot"> <button onclick="alertOk()">OK</button> </div>
+    <div id="head">
+        <button class="btn" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" onclick="resetBtn()" type="button" id="resetBtn">
+          <image src="icons/restart.png" width="60%" height="60%"></image>
+        </button>
+      <div id="currentInfo">
+        <button id="currentView">
+          <image id="currentViewImage" src="icons/mandelView.png"></image>
+        </button>
+        <button id="currentAction">
+          <image id="currentActionImage" src="icons/plusWhite.png"></image>
+        </button>
       </div>
     </div>
+
+    <div id="foot">
+      <button class="btn" onclick="zoomInBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="zoomInBtn">
+        <image src="icons/plus.png" width="60%" height="60%"></image>
+      </button>
+      <button class="btn" onclick="zoomOutBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="zoomOutBtn">
+        <image src="icons/minus.png" width="60%" height="60%"></image>
+      </button>
+      <button class="btn" onclick="mandelBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="mandelBtn">
+        <image src="icons/mandelViewInvert.png" width="60%" height="60%"></image>
+      </button>
+      <button class="btn" onclick="juliaBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="juliaBtn">
+        <image src="icons/juliaViewInvert.png" width="95%" height="70%"></image>
+      </button>
+    </div>
+
+    <image src="textureOne.png" id="textureOne" width="0px" height = "0px"></image>
 
   </body>
 </html>

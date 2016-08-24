@@ -2,7 +2,7 @@
 var gl, canvas;
 var vertices, width, height;
 var program;
-var began = false;
+var began = true;
 var buttons;
 
 var view = {
@@ -13,8 +13,7 @@ var view = {
 
 var state = {
   NORMAL: 0,
-  JULIASCAN: 1,
-  JULIAPOINT: 2,
+  JULIA: 1,
   current: 0
 };
 
@@ -34,9 +33,30 @@ var mouse = {
   initial: null
 };
 
+function  mouseEnterButton(){
+  began = false;
+}
+
+function  mouseLeaveButton(){
+  began = true;
+}
+
 window.onload = function init()
 {
     canvas = document.getElementById("gl-canvas");
+    buttons = document.getElementsByClassName("btn");
+    buttons = {
+      reset: document.getElementById("resetBtn"),
+      plus: document.getElementById("zoomInBtn"),
+      minus: document.getElementById("zoomOutBtn"),
+      mandel: document.getElementById("mandelBtn"),
+      julia: document.getElementById("juliaBtn"),
+      currentView: document.getElementById("currentView"),
+      currentAction: document.getElementById("currentAction"),
+      currentViewImage: document.getElementById("currentViewImage"),
+      currentActionImage: document.getElementById("currentActionImage")
+    };
+    buttons.plus.style.display = "none";
 
     canvas.addEventListener("touchstart", touchStart, false);
     canvas.addEventListener("touchend", touchEnd, false);
@@ -47,12 +67,7 @@ window.onload = function init()
 
     // size window
     canvas.width = width = window.innerWidth;
-    canvas.height = height = window.innerHeight * 0.95;
-
-    //size buttons
-    buttons = document.getElementsByClassName("btn");
-    for(var i = 0; i < buttons.length; ++i)
-      buttons[i].style.width = (width/7) + "px"
+    canvas.height = height = window.innerHeight;
 
     // set uniform vals
     julia.val = vec2(-3.0, 0.0);
@@ -73,6 +88,7 @@ window.onload = function init()
 
     //webgl
     gl.viewport(0, 0, canvas.width, canvas.height);
+    //gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     program = initShaders(gl, "vertex-shader", "fragment-shader");
@@ -99,57 +115,8 @@ window.onload = function init()
     gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     gl.uniform2fv(julia.loc, flatten(julia.val));
 
-    firstRender();
+    render();
 };
-
-function Alert(head, body){
-  this.draw = function(){
-    var winW = width;
-    var winH = height;
-    var dialogoverlay = document.getElementById("dialogoverlay");
-    var dialogbox = document.getElementById("dialogbox");
-    dialogoverlay.style.display = "block";
-    dialogoverlay.style.height = winH+"px";
-    dialogbox.style.left = "10%";
-    dialogbox.style.top = "0px";
-    dialogbox.style.display = "block";
-    document.getElementById("dialogboxhead").innerHTML = head;
-    document.getElementById("dialogboxbody").innerHTML = body;
-    for(var i = 0; i < buttons.length; ++i){
-      buttons[i].disabled = true;
-    }
-  }
-}
-
-function alertOk(){
-  document.getElementById("dialogbox").style.display = "none";
-  document.getElementById("dialogoverlay").style.display = "none";
-  began = true;
-  for(var i = 0; i < buttons.length; ++i){
-    buttons[i].disabled = false;
-  }
-  render();
-};
-
-function firstRender(){
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length);
-
-  window.setTimeout(welcome, 100);
-}
-
-function welcome(){
-  var alert = new Alert("Fractal Explorer",
-  "<p>Move</p>---   drag mouse / finger.<br>"+
-  "<p>Zoom</p>---    click mouse / tap finger.<br>"+
-  "<p>Change Zoom Direction</p>---    press \"Zoom In\" or \"Zoom Out\" button.<br>"+
-  "<p>View Mandelbrot Set</p>---    press \"MANDELBROT\" button.<br>"+
-  "<p>View Julia Set for a specific point</p>---    press \"JULIA-POINT\" button, then click/tap the point on the screen.<br>"+
-  "<p>View Julia Set for mouse location</p>---    press \"JULIA\" button, then move mouse / drag finger, around.<br>"
-);
-  alert.draw();
-}
-
 
 function render() {
     if(view.current === view.MANDEL){
@@ -175,7 +142,7 @@ function render() {
 function windowResize(){
   var oldCenter = vec2(bottomLeft.val[0] + width/2*pixelSize.val, bottomLeft.val[1] + height/2*pixelSize.val);
   canvas.width = width = window.innerWidth;
-  canvas.height = height = window.innerHeight * 0.95;
+  canvas.height = height = window.innerHeight;
   pixelSize.val = pixelSize.originalVal = width < height ? 4.0/width : 4.0/height;
 
   //calc button sizes
@@ -196,23 +163,51 @@ function windowResize(){
 
 // Button handlers
 function mandelBtn(){
+  buttons.currentViewImage.src = "icons/mandelViewInvert.png";
+  buttons.mandel.style.display = "none";
   view.current = view.MANDEL;
   state.current = state.NORMAL;
   render();
 }
 
 function juliaBtn(){
-  state.current = state.JULIAPOINT;
-  view.current = view.JULIA;
-  render();
-}
+  if(state.current === state.JULIA){
+      buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = "";
+      buttons.julia.src = "icons/juliaView.png";
+      buttons.julia.style.background = "#fff";
+      buttons.julia.style.borderColor = "#000";
+      if(view.current === view.MANDEL)
+        buttons.mandel.style.display = "none";
+      else
+        buttons.mandel.style.display = "";
+      if(zoom.in){
+        buttons.plus.style.display = "none";
+        buttons.minus.style.display = "";
+      }
+      else{
+        buttons.minus.style.display = "none";
+        buttons.plus.style.display = "";
+      }
+      state.current = state.NORMAL;
+  }
+  else{
+    buttons.plus.style.display = buttons.minus.style.display = buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = "none";
+    buttons.julia.src = "icons/juliaViewInvert.png";
+    buttons.julia.style.background = "#000";
+    buttons.julia.style.borderColor = "#fff";
+    state.current = state.JULIA;
+    render();
+  }
 
-function juliaPointBtn(){
-  state.current = state.JULIASCAN;
-  render();
+
 }
 
 function resetBtn(){
+  buttons.plus.style.display = "none";
+  buttons.mandel.style.display = buttons.minus.style.display = "";
+  buttons.currentActionImage.src = "icons/plusWhite.png";
+  buttons.currentViewImage.src = "icons/mandelView.png";
+
   state.current = state.NORMAL;
   view.current = view.MANDEL;
   zoom.in = true;
@@ -229,11 +224,17 @@ function resetBtn(){
 }
 
 function zoomInBtn(){
+  buttons.plus.style.display = "none";
+  buttons.minus.style.display = "";
+  buttons.currentActionImage.src = "icons/plusWhite.png";
   zoom.in = true;
   state.current = state.NORMAL;
 }
 
 function zoomOutBtn(){
+  buttons.minus.style.display = "none";
+  buttons.plus.style.display = "";
+  buttons.currentActionImage.src = "icons/minusWhite.png";
   zoom.in = false;
   state.current = state.NORMAL;
 }
@@ -269,12 +270,29 @@ function inputClicked(x, y){
     gl.uniform1f(pixelSize.loc, pixelSize.val);
 
   }
+
   // JULIASCAN
-  else if(mouseMoved  &&  state.current === state.JULIASCAN){
+  else if(mouseMoved  &&  state.current === state.JULIA){
     julia.val = loc;
     state.current = state.NORMAL;
     view.current = view.JULIA;
     gl.uniform2fv(julia.loc, flatten(julia.val));
+
+    buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = "";
+    buttons.currentViewImage.src = "icons/juliaViewInvert.png";
+    buttons.julia.src = "icons/juliaView.png";
+    buttons.julia.style.background = "#fff";
+    buttons.julia.style.borderColor = "#000";
+    if(zoom.in){
+      buttons.plus.style.display = "none";
+      buttons.minus.style.display = "";
+    }
+    else{
+      buttons.minus.style.display = "none";
+      buttons.plus.style.display = "";
+    }
+
+
   }
 
   mouse.last = null;
@@ -293,13 +311,13 @@ function inputMoved(x, y){
   if(!began)
     return;
 
-    if(state.current === state.JULIAPOINT){
-      julia.val[0] = bottomLeft.val[0]+x*pixelSize.val;
-      julia.val[1] = bottomLeft.val[1]+y*pixelSize.val;
-      gl.uniform2fv(julia.loc, julia.val);
-      render();
-      return;
-    }
+    // if(state.current === state.JULIA){
+    //   julia.val[0] = bottomLeft.val[0]+x*pixelSize.val;
+    //   julia.val[1] = bottomLeft.val[1]+y*pixelSize.val;
+    //   gl.uniform2fv(julia.loc, julia.val);
+    //   render();
+    //   return;
+    // }
 
     if(mouse.last === null)
       return;
@@ -321,9 +339,9 @@ window.onmousedown = function(){
 
 window.onmousemove = function(){
   inputMoved(event.clientX, height-event.clientY);
-  mouse.current = vec2(event.clientX, height-event.clientY);
 
-  // calcLine(event.clientX, height-event.clientY);
+
+  mouse.current = vec2(event.clientX, height-event.clientY);
 };
 
 window.onclick = function(){
@@ -332,6 +350,7 @@ window.onclick = function(){
 
 // TOUCH
 function touchStart(evt){
+  console.log(began);
   evt.preventDefault();
   var touches = evt.changedTouches;
   var touch = touches[0];
