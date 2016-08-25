@@ -2,7 +2,9 @@
 <html>
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0"/>
     <title>Fractal Explorer</title>
+
 <style>
   *{ padding: 0; margin: 0; border: 0; }
   body { overflow: hidden; }
@@ -71,7 +73,7 @@
   }
 
   #currentAction {
-    margin: 10px;
+    margin: 5px 10px;
     /*disabled: true;*/
     width: 40px;
     height: 40px;
@@ -82,7 +84,7 @@
   }
 
   #currentView {
-    margin: 10px;
+    margin: 5px 10px;
     width: 40px;
     height: 40px;
     /*disabled: true;*/
@@ -92,7 +94,12 @@
   }
 
   #currentInfo {
-    position: relative;
+    display: inline-block;
+    position: absolute;
+    top:0px;
+    left: 0px;
+    width: 100%;
+    heeight: 40px;
     text-allign: center;
   }
 
@@ -110,8 +117,10 @@
     background: #fff;
     position: relative;
     border-radius: 100%;
-    width: 50px;
-    height: 50px;
+    /*width: 50px;
+    height: 50px;*/
+    width: 13mm;
+    height: 13mm;
     margin: 0px 10px;
     border: 2px solid #000;
   }
@@ -249,7 +258,7 @@ main()
     </canvas>
 
     <div id="head">
-        <button class="btn" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" onclick="resetBtn()" type="button" id="resetBtn">
+        <button class="btn" onclick="resetBtn()" type="button" id="resetBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
           <image src="icons/restart.png" width="60%" height="60%"></image>
         </button>
       <div id="currentInfo">
@@ -263,16 +272,16 @@ main()
     </div>
 
     <div id="foot">
-      <button class="btn" onclick="zoomInBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="zoomInBtn">
+      <button class="btn" onclick="zoomInBtn()" type="button" id="zoomInBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
         <image src="icons/plus.png" width="60%" height="60%"></image>
       </button>
-      <button class="btn" onclick="zoomOutBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="zoomOutBtn">
+      <button class="btn" onclick="zoomOutBtn()" type="button" id="zoomOutBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
         <image src="icons/minus.png" width="60%" height="60%"></image>
       </button>
-      <button class="btn" onclick="mandelBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="mandelBtn">
+      <button class="btn" onclick="mandelBtn()" type="button" id="mandelBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
         <image src="icons/mandelViewInvert.png" width="60%" height="60%"></image>
       </button>
-      <button class="btn" onclick="juliaBtn()" onmouseenter="mouseEnterButton()" onmouseleave="mouseLeaveButton()" type="button" id="juliaBtn">
+      <button class="btn" onclick="juliaBtn()" type="button" id="juliaBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
         <image src="icons/juliaViewInvert.png" width="95%" height="70%"></image>
       </button>
     </div>

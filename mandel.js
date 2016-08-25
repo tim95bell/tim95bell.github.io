@@ -33,12 +33,13 @@ var mouse = {
   initial: null
 };
 
-function  mouseEnterButton(){
-  began = false;
-}
-
-function  mouseLeaveButton(){
-  began = true;
+function preventBubble(event){
+  if (event.stopPropagation){
+       event.stopPropagation();
+   }
+   else if(window.event){
+      window.event.cancelBubble=true;
+   }
 }
 
 window.onload = function init()
@@ -169,6 +170,7 @@ function mandelBtn(){
   view.current = view.MANDEL;
   state.current = state.NORMAL;
   render();
+  event.stopPropagation();
 }
 
 function juliaBtn(){
@@ -199,8 +201,7 @@ function juliaBtn(){
     state.current = state.JULIA;
     render();
   }
-
-
+  event.stopPropagation();
 }
 
 function resetBtn(){
@@ -222,6 +223,7 @@ function resetBtn(){
   gl.uniform1f(lerpAmount.loc, lerpAmount.val);
   gl.uniform2fv(julia.loc, flatten(julia.val));
   render();
+  event.stopPropagation();
 }
 
 function zoomInBtn(){
@@ -230,6 +232,7 @@ function zoomInBtn(){
   buttons.currentActionImage.src = "icons/plusWhite.png";
   zoom.in = true;
   state.current = state.NORMAL;
+  event.stopPropagation();
 }
 
 function zoomOutBtn(){
@@ -238,6 +241,7 @@ function zoomOutBtn(){
   buttons.currentActionImage.src = "icons/minusWhite.png";
   zoom.in = false;
   state.current = state.NORMAL;
+  event.stopPropagation();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -341,7 +345,6 @@ window.onmousedown = function(){
 window.onmousemove = function(){
   inputMoved(event.clientX, height-event.clientY);
 
-
   mouse.current = vec2(event.clientX, height-event.clientY);
 };
 
@@ -351,8 +354,6 @@ window.onclick = function(){
 
 // TOUCH
 function touchStart(evt){
-  console.log(began);
-  evt.preventDefault();
   var touches = evt.changedTouches;
   var touch = touches[0];
 
@@ -363,18 +364,17 @@ function touchStart(evt){
 }
 
 function touchEnd(evt){
-  evt.preventDefault();
   var touches = evt.changedTouches;
   var touch = touches[0];
 
   var x = touch.clientX;
   var y = height-touch.clientY;
 
-  inputClicked(x, y);
+  mouse.last = null;
+//  inputClicked(x, y);
 }
 
 function touchMove(evt){
-  evt.preventDefault();
   var touches = evt.changedTouches;
   var touch = touches[0];
 
