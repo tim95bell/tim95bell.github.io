@@ -5,6 +5,8 @@ var program;
 var began = true;
 var buttons;
 
+var NUM_COLORS = 4;
+
 var view = {
   MANDEL: 0,
   JULIA: 1,
@@ -19,14 +21,14 @@ var state = {
 
 var zoom = {
   in: true,
-  // amount: 0.05
-  amount: 0.2
+  amount: 0.1
 };
 
 var bottomLeft = {};
 var pixelSize = {};
 var julia = {};
 var lerpAmount = {};
+var color = {};
 
 var mouse = {
   last: null,
@@ -55,7 +57,9 @@ window.onload = function init()
       currentView: document.getElementById("currentView"),
       currentAction: document.getElementById("currentAction"),
       currentViewImage: document.getElementById("currentViewImage"),
-      currentActionImage: document.getElementById("currentActionImage")
+      currentActionImage: document.getElementById("currentActionImage"),
+      color: document.getElementById("colorBtn"),
+      mandelInstructions: document.getElementById("mandelInstructions")
     };
     buttons.mandel.style.display = "none";
     buttons.plus.style.display = "none";
@@ -79,6 +83,7 @@ window.onload = function init()
     pixelSize.val = pixelSize.originalVal = width < height ? 6.0/width : 6.0/height;
     bottomLeft.val = vec2(-width/2*pixelSize.val, -height/2*pixelSize.val);
     bottomLeft.originalVal = vec2(bottomLeft.val);
+    color.val = 0;
 
     //set vertices
     vertices = [
@@ -110,12 +115,14 @@ window.onload = function init()
     pixelSize.loc = gl.getUniformLocation(program, "pixelSize");
     lerpAmount.loc = gl.getUniformLocation(program, "lerpAmount");
     julia.loc = gl.getUniformLocation(program, "julia");
+    color.loc = gl.getUniformLocation(program, "color");
 
     // send uniform values to gpu
     gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
     gl.uniform1f(pixelSize.loc, pixelSize.val);
     gl.uniform1f(lerpAmount.loc, lerpAmount.val);
     gl.uniform2fv(julia.loc, flatten(julia.val));
+    gl.uniform1i(color.loc, color.val);
 
     render();
 };
@@ -175,7 +182,8 @@ function mandelBtn(){
 
 function juliaBtn(){
   if(state.current === state.JULIA){
-      buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = "";
+      buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = buttons.color.style.display = "";
+      buttons.mandelInstructions.style.display = "none";
       buttons.julia.src = "icons/juliaView.png";
       buttons.julia.style.background = "#fff";
       buttons.julia.style.borderColor = "#000";
@@ -194,7 +202,8 @@ function juliaBtn(){
       state.current = state.NORMAL;
   }
   else{
-    buttons.plus.style.display = buttons.minus.style.display = buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = "none";
+    buttons.plus.style.display = buttons.minus.style.display = buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = buttons.color.style.display = "none";
+    buttons.mandelInstructions.style.display = "inline-block";
     buttons.julia.src = "icons/juliaViewInvert.png";
     buttons.julia.style.background = "#000";
     buttons.julia.style.borderColor = "#fff";
@@ -205,7 +214,7 @@ function juliaBtn(){
 }
 
 function resetBtn(){
-  buttons.plus.style.display = buttons.mandel.style.display = "none";
+  buttons.plus.style.display = buttons.mandel.style.display = buttons.mandelInstructions.style.display = "none";
   buttons.minus.style.display = "";
   buttons.currentActionImage.src = "icons/plusWhite.png";
   buttons.currentViewImage.src = "icons/mandelView.png";
@@ -217,6 +226,7 @@ function resetBtn(){
   lerpAmount.val = lerpAmount.originalVal;
   bottomLeft.val = vec2(bottomLeft.originalVal);
   julia.val = vec2(julia.originalVal);
+  color.val = 0;
 
   gl.uniform2fv(bottomLeft.loc, flatten(bottomLeft.val));
   gl.uniform1f(pixelSize.loc, pixelSize.val);
@@ -244,6 +254,14 @@ function zoomOutBtn(){
   event.stopPropagation();
 }
 
+function colorBtn(){
+  ++color.val;
+  if(color.val >= NUM_COLORS)
+    color.val = 0;
+  gl.uniform1i(color.loc, color.val);
+  event.stopPropagation();
+  render();
+}
 ////////////////////////////////////////////////////////////////////////
 //////////// Touch and Mouse
 ////////////////////////////////////////////////////////////////////////
@@ -288,6 +306,7 @@ function inputClicked(x, y){
     buttons.julia.src = "icons/juliaView.png";
     buttons.julia.style.background = "#fff";
     buttons.julia.style.borderColor = "#000";
+    buttons.mandelInstructions.style.display = "none";
     if(zoom.in){
       buttons.plus.style.display = "none";
       buttons.minus.style.display = "";
@@ -296,8 +315,6 @@ function inputClicked(x, y){
       buttons.minus.style.display = "none";
       buttons.plus.style.display = "";
     }
-
-
   }
 
   mouse.last = null;
@@ -315,14 +332,6 @@ function inputDown(x, y){
 function inputMoved(x, y){
   if(!began)
     return;
-
-    // if(state.current === state.JULIA){
-    //   julia.val[0] = bottomLeft.val[0]+x*pixelSize.val;
-    //   julia.val[1] = bottomLeft.val[1]+y*pixelSize.val;
-    //   gl.uniform2fv(julia.loc, julia.val);
-    //   render();
-    //   return;
-    // }
 
     if(mouse.last === null)
       return;

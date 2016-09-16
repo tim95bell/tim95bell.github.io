@@ -6,7 +6,11 @@
     <title>Fractal Explorer</title>
 
 <style>
-  *{ padding: 0; margin: 0; border: 0; }
+  *{ padding: 0; margin: 0; border: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
   body { overflow: hidden; }
 
   button:focus {
@@ -21,13 +25,6 @@
     margin: 10px 0px;
     height: 50px;
   }
-
-  * {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-  }
-
 
   #foot {
     position: fixed;
@@ -45,36 +42,42 @@
 
   #zoomInBtn {
     float: left;
+    z-index: 10;
   }
   #zoomOutBtn {
     float: left;
+    z-index: 10;
   }
   #juliaBtn {
     float: right;
+    z-index: 10;
   }
   #mandelBtn {
     float: right;
+    z-index: 10;
+  }
+
+  #colorBtn{
+    position: relative;
+    display: inline-block;
+    z-index: 10;
   }
 
   #currentView img {
     position: relative;
-
     width: 100%;
     height: 100%;
   }
 
   #currentAction img {
     position: relative;
-
     padding: 20% 0px;
-
     width: 60%;
     height: 60%;
   }
 
   #currentAction {
     margin: 5px 10px;
-    /*disabled: true;*/
     width: 40px;
     height: 40px;
     background: #000;
@@ -87,7 +90,6 @@
     margin: 5px 10px;
     width: 40px;
     height: 40px;
-    /*disabled: true;*/
     position: relative;
     background: transparent;
     display: inline-block;
@@ -99,8 +101,18 @@
     top:0px;
     left: 0px;
     width: 100%;
-    heeight: 40px;
-    text-allign: center;
+    height: 40px;
+    text-align: center;
+  }
+
+  #colorDiv {
+    display: inline-block;
+    position: absolute;
+    top:0px;
+    left: 0px;
+    width: 100%;
+    height: 40px;
+    text-align: center;
   }
 
   #head div {
@@ -117,8 +129,6 @@
     background: #fff;
     position: relative;
     border-radius: 100%;
-    /*width: 50px;
-    height: 50px;*/
     width: 13mm;
     height: 13mm;
     margin: 0px 10px;
@@ -128,6 +138,25 @@
   .btn:hover {
     width: 55px;
     height: 55px;
+  }
+
+  #mandelInstructions {
+    width: 100%;
+    height: 60px;
+    color: white;
+    background-color: rgba(0, 0, 0, 1);
+    /*font-size: 1.5vw;*/
+    font-size: 3.5vmin;
+    position: absolute;
+    display: none;
+    bottom: 0; left: 0;
+    z-index = -1;
+    text-align: center;
+  }
+
+  #mandelInstructions p {
+    padding-left: 20%;
+    padding-right: 20%;
   }
 
 </style>
@@ -144,10 +173,15 @@ main()
 
 precision mediump float;
 
+#ifdef GL_ES
+precision highp float;
+#endif
+
 uniform vec2 bottomLeft;
 uniform float pixelSize;
 uniform float lerpAmount;
 uniform vec2 julia;
+uniform int color;
 
 const int MAX_ITERATIONS = 1000;
 
@@ -190,31 +224,29 @@ main()
     ++iterations;
   }
 
-  // if(iterations == MAX_ITERATIONS)
-  //   discard;
-
   float percent = float(iterations)/float(MAX_ITERATIONS);
+  percent = sqrt(percent);
 
+if(color == 0){
 // RED
-  // percent = sqrt(percent);
-  // if(iterations < 15){
-  //   gl_FragColor = vec4(float(iterations)*0.01, 0.0, 0.0, 1.0);
-  // }
-  // else if(percent < 0.333){
-  //   gl_FragColor = vec4(percent*2.4, 0.0, 0.0, 1.0);
-  // }
-  // else if(percent < 0.666){
-  //   gl_FragColor = vec4(0.8 + (percent-0.333)/1.7, (percent-0.333)*2.4, 0.0, 1.0);
-  // }
-  // else{
-  //   gl_FragColor = vec4(0.99, 0.8 + (percent-0.666)/1.7, (percent-0.666)*3.0, 1.0 );
-  // }
-
-// BLACK & WHITE
+  if(iterations < 15){
+    gl_FragColor = vec4(float(iterations)*0.01, 0.0, 0.0, 1.0);
+  }
+  else if(percent < 0.333){
+    gl_FragColor = vec4(percent*2.4, 0.0, 0.0, 1.0);
+  }
+  else if(percent < 0.666){
+    gl_FragColor = vec4(0.8 + (percent-0.333)/1.7, (percent-0.333)*2.4, 0.0, 1.0);
+  }
+  else{
+    gl_FragColor = vec4(0.99, 0.8 + (percent-0.666)/1.7, (percent-0.666)*3.0, 1.0 );
+  }
+}
+else if(color == 1){
+  // BLACK & WHITE
   if(iterations == MAX_ITERATIONS)
     discard;
-  percent = sqrt(percent);
-  // percent = percent;
+   //percent = percent;
   if(iterations < 15){
     float x = float(iterations)*0.01;
     gl_FragColor = vec4(x, x, x, 1.0);
@@ -222,27 +254,27 @@ main()
   else{
     gl_FragColor = vec4(percent, percent, percent, 1.0);
   }
-
-//  WHITE & BLACK
-  // percent = sqrt(percent);
-  // if(iterations < 15){
-  //   float x = 1.0-float(iterations)*0.01;
-  //   gl_FragColor = vec4(x, x, x, 1.0);
-  // }
-  // else{
-  //   gl_FragColor = vec4(percent, percent, percent, 1.0);
-  //
-  // }
-
-  //  WHITE & BLACK  (SMOOTH)
-    // if(iterations == MAX_ITERATIONS){
-    //     gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    // }
-    // else{
-    //   //percent = 1.0-sqrt(percent);
-    //   percent = 1.0-sqrt(percent);
-    //   gl_FragColor = vec4(percent, percent, percent, 1.0);
-    // }
+}
+else if(color == 2){
+  //  WHITE & BLACK
+  if(iterations < 15){
+    float x = 1.0-float(iterations)*0.01;
+    gl_FragColor = vec4(x, x, x, 1.0);
+  }
+  else{
+    gl_FragColor = vec4(percent, percent, percent, 1.0);
+  }
+}
+else if(color == 3){
+    //  WHITE & BLACK  (SMOOTH)
+    if(iterations == MAX_ITERATIONS){
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+    else{
+      percent = 1.0-percent;
+      gl_FragColor = vec4(percent, percent, percent, 1.0);
+    }
+  }
 
 }
 </script>
@@ -271,6 +303,10 @@ main()
       </div>
     </div>
 
+    <div id="mandelInstructions">
+      <p>Click/Tap anywhere to see the corresponding julia set.</p>
+    </div>
+
     <div id="foot">
       <button class="btn" onclick="zoomInBtn()" type="button" id="zoomInBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
         <image src="icons/plus.png" width="60%" height="60%"></image>
@@ -284,9 +320,13 @@ main()
       <button class="btn" onclick="juliaBtn()" type="button" id="juliaBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
         <image src="icons/juliaViewInvert.png" width="95%" height="70%"></image>
       </button>
+      <div id="colorDiv">
+        <button class="btn" onclick="colorBtn()" typ e="button" id="colorBtn" onmousedown="preventBubble(event)" onmouseup="preventBubble(event)">
+          <image src="icons/color.png" width="95%" height="70%"></image>
+        </button>
+      </div>
     </div>
 
-    <image src="textureOne.png" id="textureOne" width="0px" height = "0px"></image>
 
   </body>
 </html>
