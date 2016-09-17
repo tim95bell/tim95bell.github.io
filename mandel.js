@@ -301,12 +301,12 @@ function inputClicked(x, y){
     view.current = view.JULIA;
     gl.uniform2fv(julia.loc, flatten(julia.val));
 
-    buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = "";
+    buttons.reset.style.display = buttons.currentAction.style.display = buttons.currentView.style.display = buttons.mandel.style.display = buttons.color.style.display = "";
+    buttons.mandelInstructions.style.display = "none";
     buttons.currentViewImage.src = "icons/juliaViewInvert.png";
     buttons.julia.src = "icons/juliaView.png";
     buttons.julia.style.background = "#fff";
     buttons.julia.style.borderColor = "#000";
-    buttons.mandelInstructions.style.display = "none";
     if(zoom.in){
       buttons.plus.style.display = "none";
       buttons.minus.style.display = "";
